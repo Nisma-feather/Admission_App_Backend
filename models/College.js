@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const collegeSchema = new mongoose.Schema(
   {
-    // 1️⃣ BASIC INFORMATION
+     user:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"User",
+      required:true
+     },
     name: {
       type: String,
       required: true,
@@ -139,6 +143,11 @@ const collegeSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    verificationStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"], // or just ["Pending", "Approved", "Rejected"]
+      default: "Pending",
     },
   },
   { timestamps: true }
