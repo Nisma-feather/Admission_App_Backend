@@ -77,8 +77,111 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+const getCourse = async (req, res) => {
+  try {
+    const { name = "", loc, feeMin, feeMax } = req.query;
+
+    console.log("query params", req.query);
+
+    // Convert filters safely to arrays
+    const level =
+      typeof req.query.level === "string" && req.query.level.trim()
+        ? req.query.level.split(",").map((v) => v.trim())
+        : [];
+
+    const category =
+      typeof req.query.category === "string" && req.query.category.trim()
+        ? req.query.category.split(",").map((v) => v.trim())
+        : [];
+
+    const duration =
+      typeof req.query.duration === "string" && req.query.duration.trim()
+        ? req.query.duration
+            .split(",")
+            .map((n) => Number(n))
+            .filter((n) => !isNaN(n))
+        : [];
+
+    // Base match stage
+    const matchStage = {
+      isActive: true,
+
+      // Name / specialization search
+      ...(name && {
+        $or: [
+          { name: { $regex: name, $options: "i" } },
+          { specialization: { $regex: name, $options: "i" } },
+        ],
+      }),
+
+      // Location
+      ...(loc && {
+        "college.location.city": {
+          $regex: loc.split(",")[0].trim(),
+          $options: "i",
+        },
+      }),
+
+      // Filters
+      ...(level.length > 0 && { level: { $in: level } }),
+      ...(category.length > 0 && { category: { $in: category } }),
+      ...(duration.length > 0 && { duration: { $in: duration } }),
+    };
+
+    // ✅ FEES RANGE OVERLAP LOGIC
+    if (feeMin !== undefined && feeMax !== undefined) {
+      matchStage.$and = [
+        ...(matchStage.$and || []),
+        {
+          "fees.max": { $gte: Number(feeMin) },
+          "fees.min": { $lte: Number(feeMax) },
+        },
+      ];
+    }
+
+    const courses = await Course.aggregate([
+      {
+        $lookup: {
+          from: "colleges",
+          localField: "college",
+          foreignField: "_id",
+          as: "college",
+        },
+      },
+      { $unwind: "$college" },
+      { $match: matchStage },
+      {
+        $project: {
+          name: 1,
+          specialization: 1,
+          level: 1,
+          category: 1,
+          duration: 1,
+          fees: 1,
+          "college.name": 1,
+          "college.location": 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      count: courses.length,
+      courses,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      message: "Unable to fetch courses",
+    });
+  }
+};
+
+
+
+
 module.exports = {
   addCourse,
   updateCourse,
   deleteCourse,
+  getCourse
 };
