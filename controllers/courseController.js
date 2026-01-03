@@ -152,6 +152,7 @@ const getCourse = async (req, res) => {
       { $match: matchStage },
       {
         $project: {
+          
           name: 1,
           specialization: 1,
           level: 1,
@@ -176,6 +177,25 @@ const getCourse = async (req, res) => {
   }
 };
 
+const getCourseById=async(req,res)=>{
+  try{
+  const {courseId} = req.params;
+  const course = await Course.findById(courseId)
+    .populate("college", "name location");
+  if (!course) {
+    return res.status(404).json({message:"course not found"})
+  }
+  return res.status(200).json({course})
+  
+    
+  }
+  catch(e){
+    console.log(e);
+    return res.status(500).json({message:"Can't able to get the course by its Id"})
+    
+  }
+}
+
 
 
 
@@ -183,5 +203,7 @@ module.exports = {
   addCourse,
   updateCourse,
   deleteCourse,
-  getCourse
+  getCourse,
+  getCourseById
+
 };

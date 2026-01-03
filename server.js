@@ -19,7 +19,7 @@ app.use(cors());
 app.use("/location",locationRoutes);
 app.use("/user",userRoutes);
 app.use("/college",collegeRoutes);
-app.use("/course",courseRoutes)
+app.use("/course",courseRoutes);
 
 
 connectDB()

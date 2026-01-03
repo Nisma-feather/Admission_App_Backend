@@ -60,7 +60,7 @@ const courseSchema = new mongoose.Schema(
       required: true,
       index: true,
       example: "Information Technology",
-    },                                                                                                                                         
+    },
 
     duration: {
       type: Number,
@@ -76,6 +76,37 @@ const courseSchema = new mongoose.Schema(
     intake: Number,
     eligibility: String,
     entranceExams: [String],
+    applicationDetails: {
+      requiredCertifications: [
+        {
+          type: String,
+          enum: [
+            "10TH_MARKSHEET",
+            "12TH_MARKSHEET",
+            "DIPLOMA_CERTIFICATE",
+            "UG_CERTIFICATE",
+            "ENTRANCE_SCORECARD",
+            "TRANSFER_CERTIFICATE",
+            "COMMUNITY_CERTIFICATE",
+            "INCOME_CERTIFICATE",
+            "AADHAAR",
+            "PASSPORT_PHOTO",
+          ],
+        },
+      ],
+      requiredDetails: [
+        {
+          type: String,
+          enum: [
+            "10TH_DETAILS",
+            "12TH_DETAILS",
+            "DIPLOMA_DETAILS",
+            "UG_DETAILS",
+            "ENTRANCE_TEST_DETAILS",
+          ],
+        },
+      ],
+    },
 
     isActive: {
       type: Boolean,
