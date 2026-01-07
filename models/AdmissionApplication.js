@@ -98,6 +98,10 @@ const admissionApplicationSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
+        fileName:{
+          type:String,
+          required:true,
+        },
 
         verified: {
           type: Boolean,
@@ -161,10 +165,10 @@ const admissionApplicationSchema = new mongoose.Schema(
 //
 // 🔒 Prevent duplicate applications for same course
 //
-admissionApplicationSchema.index(
-  { "student.userId": 1, course: 1 },
-  { unique: true }
-);
+// admissionApplicationSchema.index(
+//   { "student.userId": 1, course: 1 },
+//   { unique: true }
+// );
 
 module.exports = mongoose.model(
   "AdmissionApplication",
