@@ -12,22 +12,35 @@ const addCourse = async (req, res) => {
       return res.status(404).json({ message: "College not found" });
     }
 
-    const newCourse = await Course.create({
-      ...req.body,
+    const body = req.body;
+
+    // 🔥 SANITIZE & CAST
+    const sanitizedCourse = {
+      ...body,
       college: collegeId,
-    });
+      duration: Number(body.duration),
+      intake: body.intake ? Number(body.intake) : undefined,
+      fees: {
+        min: body.fees?.min ? Number(body.fees.min) : undefined,
+        max: body.fees?.max ? Number(body.fees.max) : undefined,
+        currency: body.fees?.currency || "INR",
+      },
+    };
+
+    const newCourse = await Course.create(sanitizedCourse);
 
     return res.status(201).json({
       message: "Course created successfully",
       data: newCourse,
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return res.status(500).json({
-      message: "Unable to add the course",
+      message: e.message || "Unable to add the course",
     });
   }
 };
+
 
 
 const updateCourse = async (req, res) => {
@@ -55,6 +68,8 @@ const updateCourse = async (req, res) => {
     });
   }
 };
+
+
 
 
 const deleteCourse = async (req, res) => {
@@ -196,6 +211,25 @@ const getCourseById=async(req,res)=>{
   }
 }
 
+const getCoursesByCollege=async(req,res)=>{
+  try{
+    const {collegeId} = req.params;
+    const collegeExists = await College.findById(collegeId);
+    if(!collegeExists){
+      return res.status(404).json({message:"College not found"})
+    }
+    const courses = await Course.find({college:collegeId});
+    return res.status(200).json({ courseCount:courses.length,courses});
+    
+
+  }
+  catch(e){
+    return res.status(500).json({message:"Can't able to get the courses"})
+    console.log(e);
+    
+  }
+}
+
 
 
 
@@ -204,6 +238,7 @@ module.exports = {
   updateCourse,
   deleteCourse,
   getCourse,
-  getCourseById
+  getCourseById,
+  getCoursesByCollege
 
 };

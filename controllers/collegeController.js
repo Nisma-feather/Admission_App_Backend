@@ -48,7 +48,7 @@ const changeVerificationStatus=async(req,res)=>{
 const getColleges = async (req, res) => {
   try {
     console.log("queries received", req.query)
-    let { name, loc,  nba } = req.query;
+    let { name, loc,  nba,verificationStatus="" } = req.query;
    
 
     const collegeType = req.query?.collegeType
@@ -99,11 +99,13 @@ const getColleges = async (req, res) => {
     if (nba && nba === true) {
       query["accreditation.nba"] = nba 
     }
-
-    console.log("FINAL QUERY:", query);
+    if (verificationStatus && verificationStatus.trim() !== ""){
+      query.verificationStatus = verificationStatus;
+    }
+      console.log("FINAL QUERY:", query);
 
     const colleges = await College.find(query).select(
-      "name location establishedYear type facilities accreditation placement admission"
+      "name location establishedYear type facilities accreditation placement admission verificationStatus"
     );
 
     return res.status(200).json({ collegCount:colleges.length, colleges });

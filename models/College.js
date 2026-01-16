@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const collegeSchema = new mongoose.Schema(
   {
-     user:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"User",
-      required:true
-     },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -148,6 +148,12 @@ const collegeSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Approved", "Rejected"], // or just ["Pending", "Approved", "Rejected"]
       default: "Pending",
+    },
+    verifiedAt: Date,
+    rejectedAt: Date,
+    rejectionReason: {
+      type: String,
+      maxlength: 500,
     },
   },
   { timestamps: true }

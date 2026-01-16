@@ -113,6 +113,8 @@ const courseSchema = new mongoose.Schema(
       default: true,
       index: true,
     },
+
+    
   },
   { timestamps: true }
 );

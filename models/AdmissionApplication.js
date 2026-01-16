@@ -59,6 +59,11 @@ const admissionApplicationSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    courseAdmission:{
+   type:mongoose.Schema.Types.ObjectId,
+    ref:"CourseAdmission",
+    required:true
+    },
 
     // 🎓 Academic details
     academicDetails: [

@@ -9,7 +9,8 @@ const locationRoutes = require("./routes/locationRoutes");
 const userRoutes = require("./routes/userRoutes");
 const collegeRoutes = require("./routes/collegeRoutes");
 const courseRoutes = require("./routes/courseRoutes");
-const applicationRoutes = require("./routes/applicationRoutes")
+const applicationRoutes = require("./routes/applicationRoutes");
+const adminRoutes = require("./routes/adminRoutes")
 
 
 
@@ -21,7 +22,8 @@ app.use("/location",locationRoutes);
 app.use("/user",userRoutes);
 app.use("/college",collegeRoutes);
 app.use("/course",courseRoutes);
-app.use("/application",applicationRoutes)
+app.use("/application",applicationRoutes);
+app.use("/admin",adminRoutes);
 
 
 connectDB()
