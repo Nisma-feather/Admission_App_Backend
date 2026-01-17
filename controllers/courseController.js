@@ -47,22 +47,40 @@ const updateCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
 
-   
-    const courseExists = await Course.findById(courseId);
-    if (!courseExists) {
+    const existingCourse = await Course.findById(courseId);
+    if (!existingCourse) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
-      new: true,
+    // 🚨 KEY FIX — exclude current document
+    const duplicateCourse = await Course.findOne({
+      college: existingCourse.college,
+      name: req.body.name,
+      level: req.body.level,
+      _id: { $ne: courseId }, // 👈 this line fixes everything
     });
 
+    if (duplicateCourse) {
+      return res.status(409).json({
+        message: "Another course with the same name and level already exists",
+      });
+    }
+
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
+      { $set: req.body },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
     return res.status(200).json({
-      message: "Updated successfully",
+      message: "Course updated successfully",
       data: updatedCourse,
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return res.status(500).json({
       message: "Course update failed",
     });
@@ -211,24 +229,45 @@ const getCourseById=async(req,res)=>{
   }
 }
 
-const getCoursesByCollege=async(req,res)=>{
-  try{
-    const {collegeId} = req.params;
-    const collegeExists = await College.findById(collegeId);
-    if(!collegeExists){
-      return res.status(404).json({message:"College not found"})
-    }
-    const courses = await Course.find({college:collegeId});
-    return res.status(200).json({ courseCount:courses.length,courses});
-    
 
-  }
-  catch(e){
-    return res.status(500).json({message:"Can't able to get the courses"})
+
+const getCoursesByCollege = async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    const { level = "",search=""} = req.query;
+
+    const collegeExists = await College.findById(collegeId);
+    if (!collegeExists) {
+      return res.status(404).json({ message: "College not found" });
+    }
+
+    // ✅ build query dynamically
+    const query = {
+      college: collegeId,
+    };
+
+    if (level) {
+      query.level = level; // only add when not ALL
+    }
+    if (search) {
+      query.$or = [
+        { name: { $regex: `${search}`, $options: "i" } },
+        { specialization: { $regex: `${search}`, $options: "i" } },
+      ];
+    }
+
+    const courses = await Course.find(query);
+
+    return res.status(200).json({
+      courseCount: courses.length,
+      courses,
+    });
+  } catch (e) {
     console.log(e);
-    
+    return res.status(500).json({ message: "Can't able to get the courses" });
   }
-}
+};
+
 
 
 

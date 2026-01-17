@@ -35,18 +35,31 @@ const courseAdmissionSchema = new mongoose.Schema(
     },
 
     intake: Number,
+
     applicationsReceived: {
       type: Number,
       default: 0,
     },
+
+    // 💰 Admission-related fees
+    fees: {
+      applicationFee: {
+        amount: Number,
+        currency: { type: String, default: "INR" },
+       
+      },
+
+      admissionFee: {
+        amount: Number, // seat booking fee
+        currency: { type: String, default: "INR" },
+        
+      },
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Prevent duplicate admission cycles
-// courseAdmissionSchema.index(
-//   { course: 1, academicYear: 1 },
-//   { unique: true }
-// );
+// ❌ Prevent duplicate admission cycle per year
+courseAdmissionSchema.index({ course: 1, academicYear: 1 }, { unique: true });
 
 module.exports = mongoose.model("CourseAdmission", courseAdmissionSchema);
