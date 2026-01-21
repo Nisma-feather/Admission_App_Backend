@@ -46,14 +46,44 @@ const courseAdmissionSchema = new mongoose.Schema(
       applicationFee: {
         amount: Number,
         currency: { type: String, default: "INR" },
-       
       },
 
       admissionFee: {
         amount: Number, // seat booking fee
         currency: { type: String, default: "INR" },
-        
       },
+    },
+
+    applicationDetails: {
+      requiredCertifications: [
+        {
+          type: String,
+          enum: [
+            "10TH_MARKSHEET",
+            "12TH_MARKSHEET",
+            "DIPLOMA_CERTIFICATE",
+            "UG_CERTIFICATE",
+            "ENTRANCE_SCORECARD",
+            "TRANSFER_CERTIFICATE",
+            "COMMUNITY_CERTIFICATE",
+            "INCOME_CERTIFICATE",
+            "AADHAAR",
+            "PASSPORT_PHOTO",
+          ],
+        },
+      ],
+      requiredDetails: [
+        {
+          type: String,
+          enum: [
+            "10TH_DETAILS",
+            "12TH_DETAILS",
+            "DIPLOMA_DETAILS",
+            "UG_DETAILS",
+            "ENTRANCE_TEST_DETAILS",
+          ],
+        },
+      ],
     },
   },
   { timestamps: true },

@@ -6,9 +6,10 @@ const createAdmissionApplication = async (req, res) => {
   try {
     // ✅ Parse JSON fields correctly
     const student = JSON.parse(req.body.student);
+    
     const academicDetails = JSON.parse(req.body.academicDetails);
     const documentsMeta = JSON.parse(req.body.documentsMeta);
-    const { course, college } = req.body;
+    const { course, college, courseAdmission} = req.body;
 
     const files = req.files;
 
@@ -39,6 +40,7 @@ const createAdmissionApplication = async (req, res) => {
       student,
       academicDetails,
       course,
+      courseAdmission,
       college,
       documents: parsedDocumentsData,
       status: "SUBMITTED",
