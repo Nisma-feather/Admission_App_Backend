@@ -73,4 +73,8 @@ const changeCollegeStatus = async (req, res) => {
   }
 };
 
+//updating college with images
+
+
+
 module.exports={changeCollegeStatus}

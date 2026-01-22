@@ -121,6 +121,7 @@ const getColleges = async (req, res) => {
 
 const getCollegeById=async(req,res)=>{
   try{
+    
     const {collegeId} = req.params;
    const college = await College.findById(collegeId);
    return res.status(200).json({ college });
@@ -132,5 +133,71 @@ const getCollegeById=async(req,res)=>{
   }
 }
 
+const updateCollegeWithImages = async (req, res) => {
+  try {
+    console.log("Updating college data")
+    const { collegeId } = req.params;
+    const updateData = {};
 
-module.exports = {createCollege,changeVerificationStatus,getColleges,getCollegeById}
+    const {
+      name,
+      code,
+      type,
+      establishedYear,
+      accreditation,
+      location,
+      contact,
+    } = req.body;
+
+    // ✅ Text fields (ONLY if provided)
+    if (name !== undefined) updateData.name = name;
+    if (code !== undefined) updateData.code = code;
+    if (type !== undefined) updateData.type = type;
+    if (establishedYear !== undefined)
+      updateData.establishedYear = establishedYear;
+
+    if (accreditation) updateData.accreditation = JSON.parse(accreditation);
+
+    if (location) updateData.location = JSON.parse(location);
+
+    if (contact) updateData.contact = JSON.parse(contact);
+
+    // ✅ Images → Base64
+    if (req.files?.logo) {
+      const file = req.files.logo[0];
+      const base64 = file.buffer.toString("base64");
+      updateData["media.logo"] = `data:${file.mimetype};base64,${base64}`;
+    }
+
+    if (req.files?.profileImage) {
+      const file = req.files.profileImage[0];
+      const base64 = file.buffer.toString("base64");
+      updateData["media.profileImage"] =
+        `data:${file.mimetype};base64,${base64}`;
+    }
+
+    const college = await College.findByIdAndUpdate(
+      collegeId,
+      { $set: updateData },
+      { new: true },
+    );
+
+    if (!college) {
+      return res.status(404).json({ message: "College not found" });
+    }
+
+    res.status(200).json({
+      message: "College updated successfully",
+      college,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Update failed",
+      error: err.message,
+    });
+  }
+};
+
+
+module.exports = {createCollege,changeVerificationStatus,getColleges,getCollegeById,updateCollegeWithImages}

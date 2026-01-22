@@ -3,7 +3,7 @@ const {createAdmissionApplication} = require("../controllers/AdmissionApplicatio
 const upload = require("../middlewares/multer")
 const router = express.Router();
 
-router.post("/",upload.array("files"),createAdmissionApplication)
+router.post("/", upload.array("files"),createAdmissionApplication)
 
 
 module.exports = router

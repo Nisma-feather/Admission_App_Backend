@@ -130,6 +130,7 @@ const collegeSchema = new mongoose.Schema(
     // 7️⃣ MEDIA
     media: {
       logo: String,
+      profileImage:String,
       images: [String],
       brochure: String,
     },
