@@ -11,7 +11,8 @@ const collegeRoutes = require("./routes/collegeRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const courseAdmissionRoutes  = require("./routes/courseAdmissionRoutes")
+const courseAdmissionRoutes  = require("./routes/courseAdmissionRoutes");
+const { updateCollegeWithImages } = require("./controllers/collegeController");
 
 
 
@@ -27,7 +28,8 @@ app.use("/college",collegeRoutes);
 app.use("/course",courseRoutes);
 app.use("/application",applicationRoutes);
 app.use("/admin",adminRoutes);
-app.use("/admissionCourse",courseAdmissionRoutes)
+app.use("/admissionCourse",courseAdmissionRoutes);
+
 
 
 connectDB()

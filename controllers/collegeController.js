@@ -166,13 +166,13 @@ const updateCollegeWithImages = async (req, res) => {
     if (req.files?.logo) {
       const file = req.files.logo[0];
       const base64 = file.buffer.toString("base64");
-      updateData["media.logo"] = `data:${file.mimetype};base64,${base64}`;
+      updateData["logo"] = `data:${file.mimetype};base64,${base64}`;
     }
 
     if (req.files?.profileImage) {
       const file = req.files.profileImage[0];
       const base64 = file.buffer.toString("base64");
-      updateData["media.profileImage"] =
+      updateData["profileImage"] =
         `data:${file.mimetype};base64,${base64}`;
     }
 
@@ -199,5 +199,41 @@ const updateCollegeWithImages = async (req, res) => {
   }
 };
 
+const updateCollegeData = async (req, res) => {
+  try {
+    const { collegeId } = req.params;
 
-module.exports = {createCollege,changeVerificationStatus,getColleges,getCollegeById,updateCollegeWithImages}
+    console.log("Request body:", req.body);
+
+    const exists = await College.findById(collegeId);
+    if (!exists) {
+      return res.status(404).json({ message: "College not found" });
+    }
+
+    const updatedCollege = await College.findByIdAndUpdate(
+      collegeId,
+      {
+        $set: {
+          "admission.admissionProcess": req.body.admission?.admissionProcess,
+          "admission.entranceExams": req.body.admission?.entranceExams,
+        },
+      },
+      { new: true },
+    );
+
+    return res.status(200).json({
+      message: "Admission data updated successfully",
+      updatedCollege,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      message: "Failed to update admission data",
+      error: e.message,
+    });
+  }
+};
+
+
+
+module.exports = {createCollege,changeVerificationStatus,getColleges,getCollegeById,updateCollegeWithImages,updateCollegeData}
