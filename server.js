@@ -12,6 +12,7 @@ const courseRoutes = require("./routes/courseRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const courseAdmissionRoutes  = require("./routes/courseAdmissionRoutes");
+const mediaRoutes = require("./routes/mediaRoutes")
 const { updateCollegeWithImages } = require("./controllers/collegeController");
 
 
@@ -29,6 +30,7 @@ app.use("/course",courseRoutes);
 app.use("/application",applicationRoutes);
 app.use("/admin",adminRoutes);
 app.use("/admissionCourse",courseAdmissionRoutes);
+app.use("/media",mediaRoutes)
 
 
 
