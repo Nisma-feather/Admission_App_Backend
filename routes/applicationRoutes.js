@@ -1,5 +1,5 @@
 const express = require('express');
-const {createAdmissionApplication, updateApplicationStatus, applicationByUser} = require("../controllers/AdmissionApplicationController")
+const {createAdmissionApplication, updateApplicationStatus, applicationByUser, getApplicationById} = require("../controllers/AdmissionApplicationController")
 const upload = require("../middlewares/multer")
 const router = express.Router();
 
