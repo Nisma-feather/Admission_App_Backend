@@ -110,5 +110,28 @@ const getCourseAdmissionStatus=async(req,res)=>{
     admission
   })
 }
+//get the details by Id
+const getAcademicAdmissionDetails=async(req,res)=>{
+  try{
+    const {courseAdmissionId} = req.params;
+    const courseAdmissionExists = await CourseAdmission.findById(courseAdmissionId);
+    if(!courseAdmissionExists){
+      return res.status(404).json({message:"course admission not present"});
 
-module.exports = {getUnassignedCourses,createCourseAdmission,getCourseAdmissionStatus}
+    }
+    return res.status(200).json({courseAdmission:courseAdmissionExists});
+
+  }
+  catch(e){
+    console.log(e);
+    return res.status(500).json({message:"Can't able to get the academic admission details"})
+
+  }
+}
+
+module.exports = {
+  getUnassignedCourses,
+  createCourseAdmission,
+  getCourseAdmissionStatus,
+  getAcademicAdmissionDetails,
+};

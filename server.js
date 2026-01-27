@@ -32,7 +32,7 @@ app.use("/admin",adminRoutes);
 app.use("/admissionCourse",courseAdmissionRoutes);
 app.use("/media",mediaRoutes)
 
-
+//69783de325a78eaa1dbeaa8b
 
 connectDB()
 

@@ -1,15 +1,15 @@
 const AdmissionApplication = require("../models/AdmissionApplication");
 const Courses = require("../models/Courses");
-
+const CourseAdmission = require("../models/CourseAdmission");
 
 const createAdmissionApplication = async (req, res) => {
   try {
     // ✅ Parse JSON fields correctly
     const student = JSON.parse(req.body.student);
-    
+
     const academicDetails = JSON.parse(req.body.academicDetails);
     const documentsMeta = JSON.parse(req.body.documentsMeta);
-    const { course, college, courseAdmission} = req.body;
+    const { course, college, courseAdmission } = req.body;
 
     const files = req.files;
 
@@ -19,24 +19,21 @@ const createAdmissionApplication = async (req, res) => {
 
     // ✅ Map documents with uploaded files
     const parsedDocumentsData = documentsMeta.map((doc) => {
-      const file = files.find(
-        (f) => f.originalname === doc.fileName
-      );
+      const file = files.find((f) => f.originalname === doc.fileName);
 
       if (!file) {
         throw new Error(`File not found for document: ${doc.type}`);
       }
 
       return {
-        type: doc.type,                // "AADHAAR"
-        fileName: doc.fileName,        // "aadhar.pdf"
+        type: doc.type, // "AADHAAR"
+        fileName: doc.fileName, // "aadhar.pdf"
         fileUrl: file.buffer.toString("base64"),
-       
       };
     });
 
     // ✅ Create application
-    const newApplication = await AdmissionApplication.create({
+    const newApplication = new AdmissionApplication({
       student,
       academicDetails,
       course,
@@ -47,11 +44,13 @@ const createAdmissionApplication = async (req, res) => {
       submittedAt: new Date(),
     });
 
+    // ✅ Save to database
+    const savedApplication = await newApplication.save();
+
     return res.status(201).json({
       message: "Application submitted successfully",
       applicationId: newApplication._id,
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -61,8 +60,58 @@ const createAdmissionApplication = async (req, res) => {
   }
 };
 
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status, remarks } = req.body;
 
+    const ALLOWED_STATUSES = [
+      "SUBMITTED",
+      "VIEWED",
+      "UNDER_REVIEW",
+      "SELECTED",
+      "WAITLISTED",
+      "REJECTED",
+      "CANCELLED",
+    ];
 
+    if (!ALLOWED_STATUSES.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const update = {
+      $set: {
+        currentStatus: status,
+      },
+      $push: {
+        statusHistory: {
+          status,
+          changedAt: new Date(),
+        },
+      },
+    };
+
+    const updatedApplication = await AdmissionApplication.findByIdAndUpdate(
+      applicationId,
+      update,
+      { new: true },
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    return res.status(200).json({
+      message: "Application status updated successfully",
+      currentStatus: updatedApplication.currentStatus,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to update application status" });
+  }
+};
 
 const getApplicationsByCourse = async (req, res) => {
   try {
@@ -120,7 +169,7 @@ const uploadDocuments = async (req, res) => {
       {
         $set: { documents: parsedDocumentsData },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!application) {
@@ -140,7 +189,50 @@ const uploadDocuments = async (req, res) => {
   }
 };
 
+const applicationByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const applications = await AdmissionApplication.find({
+      "student.userId": userId,
+    })
+      .select("course college courseAdmission currentStatus createdAt")
+      .populate("course", "name degree duration fees")
+      .populate("college", "name location logo")
+      .populate("courseAdmission", "status")
+      .sort({ createdAt: -1 })
+      .limit(5);
 
 
+    return res.status(200).json({ applications });
+  } catch (e) {
+    console.error(e);
+    return res
+      .status(500)
+      .json({ message: "Unable to fetch user applications" });
+  }
+};
 
-module.exports ={createAdmissionApplication,getApplicationsByCourse,uploadDocuments}
+const getApplicationById=async()=>{
+  try{
+    const {applicationId} = req.params;
+    const applications = await AdmissionApplication.findById(applicationId);
+    return res.status(200).json({applications});
+    
+
+  }
+  catch(e){
+    console.log(e);
+    return res.status(500).json({message:"Can't able to get the application"})
+  }
+}
+
+
+module.exports = {
+  createAdmissionApplication,
+  getApplicationsByCourse,
+  uploadDocuments,
+  updateApplicationStatus,
+  applicationByUser, //getting user Application
+  getApplicationById
+};
