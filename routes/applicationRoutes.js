@@ -6,8 +6,10 @@ const router = express.Router();
 router.post("/", upload.array("files"),createAdmissionApplication);
 
 router.post("/update-status/:applicationId",updateApplicationStatus);
-router.get("/getById/:applicationId",getApplicationById)
+router.get("/getById/:applicationId",getApplicationById);
+router.put("/update-status/:applicationId",updateApplicationStatus)
 router.get("/:userId", applicationByUser);
+
 
 
 

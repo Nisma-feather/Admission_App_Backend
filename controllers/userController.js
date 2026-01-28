@@ -58,7 +58,7 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("matching");
+   
       return res.status(401).json({ message: "Invalid credentials" });
     }
 

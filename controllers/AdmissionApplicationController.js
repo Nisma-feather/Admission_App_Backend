@@ -213,11 +213,14 @@ const applicationByUser = async (req, res) => {
   }
 };
 
-const getApplicationById=async()=>{
+const getApplicationById=async(req,res)=>{
   try{
     const {applicationId} = req.params;
-    const applications = await AdmissionApplication.findById(applicationId);
-    return res.status(200).json({applications});
+    const application = await AdmissionApplication.findById(applicationId)
+      .select("-documents")
+      .populate("course", "name specialization")
+      .populate("college", "name");
+    return res.status(200).json({application});
     
 
   }
@@ -232,7 +235,7 @@ module.exports = {
   createAdmissionApplication,
   getApplicationsByCourse,
   uploadDocuments,
-  updateApplicationStatus,
+  updateApplicationStatus, //to update the status of the application
   applicationByUser, //getting user Application
   getApplicationById
 };

@@ -38,7 +38,7 @@ const createCourseAdmission = async (req, res) => {
       admissionWindow,
       intake,
       fees,
-      applicationStatus : "OPEN", // optional (OPEN / CLOSED)
+      applicationStatus: "OPEN", // optional (OPEN / CLOSED)
       applicationDetails,
     });
 
@@ -62,76 +62,122 @@ const createCourseAdmission = async (req, res) => {
   }
 };
 
+const getUnassignedCourses = async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    const { academicYear } = req.query;
 
-const getUnassignedCourses=async(req,res)=>{
-    try{
-        const {collegeId} = req.params;
-        const {academicYear} = req.query;
-
-        if(!academicYear){
-            return res.status(400).json({
-                message:"Academic year is required"
-            })
-        }
-        const admissions = await CourseAdmission.find(
-            {
-                college:collegeId,
-                academicYear,
-            },
-            {
-                course:1
-            }
-        )
-        const admittedCourseIds = admissions.map((admission)=> admission.course)
-        const availableCourses = await Course.find({college:collegeId,isActive:true,_id:{$nin:admittedCourseIds}}).sort({createdAt:-1})
-        return res.status(200).json({count:availableCourses.length,availableCourses})
-    
+    if (!academicYear) {
+      return res.status(400).json({
+        message: "Academic year is required",
+      });
     }
-    catch(e){
-        console.log(e);
-        return res.status(500).json({message:"Can't able to get the unassigned courses for the year"})
-    }
-}
+    const admissions = await CourseAdmission.find(
+      {
+        college: collegeId,
+        academicYear,
+      },
+      {
+        course: 1,
+      },
+    );
+    const admittedCourseIds = admissions.map((admission) => admission.course);
+    const availableCourses = await Course.find({
+      college: collegeId,
+      isActive: true,
+      _id: { $nin: admittedCourseIds },
+    }).sort({ createdAt: -1 });
+    return res
+      .status(200)
+      .json({ count: availableCourses.length, availableCourses });
+  } catch (e) {
+    console.log(e);
+    return res
+      .status(500)
+      .json({
+        message: "Can't able to get the unassigned courses for the year",
+      });
+  }
+};
 
-const getCourseAdmissionStatus=async(req,res)=>{
-  const {courseId} = req.params;
-  console.log("Course ID",courseId)
-  const {academicYear} = req.query;
+const getCourseAdmissionStatus = async (req, res) => {
+  const { courseId } = req.params;
+  console.log("Course ID", courseId);
+  const { academicYear } = req.query;
 
   const admission = await CourseAdmission.findOne({
-    course:courseId,
+    course: courseId,
     academicYear,
-    applicationStatus:"OPEN"
-
+    applicationStatus: "OPEN",
   });
 
   return res.status(200).json({
     isOpen: !!admission,
-    admission
-  })
-}
+    admission,
+  });
+};
 //get the details by Id
-const getAcademicAdmissionDetails=async(req,res)=>{
-  try{
-    const {courseAdmissionId} = req.params;
-    const courseAdmissionExists = await CourseAdmission.findById(courseAdmissionId);
-    if(!courseAdmissionExists){
-      return res.status(404).json({message:"course admission not present"});
+const getAcademicAdmissionDetails = async (req, res) => {
+  try {
+    const { courseAdmissionId } = req.params;
+    const courseAdmissionExists =
+      await CourseAdmission.findById(courseAdmissionId)
 
+    if (!courseAdmissionExists) {
+      return res.status(404).json({ message: "course admission not present" });
     }
-    return res.status(200).json({courseAdmission:courseAdmissionExists});
-
-  }
-  catch(e){
+    return res.status(200).json({ courseAdmission: courseAdmissionExists });
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({message:"Can't able to get the academic admission details"})
-
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the academic admission details" });
   }
-}
+};
+
+const getCoursesByAcademyYear = async (req, res) => {
+  try {
+    const { academicYear, collegeId } = req.query;
+
+    const query = {};
+
+    if (academicYear) {
+      query.academicYear = academicYear;
+    }
+
+    if (collegeId) {
+      query.college = collegeId;
+    }
+
+    const activeApplication = await CourseAdmission.countDocuments({
+      ...query,
+      applicationStatus: "OPEN",
+    });
+    const inActiveApplication = await CourseAdmission.countDocuments({
+      ...query,
+      applicationStatus: "CLOSED",
+    });
+    const courseAdmission = await CourseAdmission.find(query)
+      .select(
+        "academicYear course admissionWindow applicationStatus intake updatedAt",
+      )
+      .populate("course", "name specialization");;
+
+    return res
+      .status(200)
+      .json({total:courseAdmission?.length || 0 ,activeApplication, inActiveApplication, courseAdmission });
+  } catch (e) {
+    console.error(e);
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the course admission" });
+  }
+};
 
 module.exports = {
   getUnassignedCourses,
   createCourseAdmission,
   getCourseAdmissionStatus,
   getAcademicAdmissionDetails,
+  getCoursesByAcademyYear, //getting the cpourses by academic year
 };
