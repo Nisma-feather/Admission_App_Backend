@@ -115,24 +115,47 @@ const updateApplicationStatus = async (req, res) => {
 
 const getApplicationsByCourse = async (req, res) => {
   try {
-    const { courseId } = req.params;
-    if (!courseId) {
-      return res.status(403).json({ message: "required field is missing" });
+    const { courseAdmissionId } = req.params;
+    const { limit = 10, page = 1, search = "" } = req.query;
+
+    const skip = (page - 1) * Number(limit);
+
+    let query = {
+      courseAdmission: courseAdmissionId,
+    };
+
+    if (search) {
+      query.$or = [
+        { "student.fullName": { $regex: search, $options: "i" } },
+        { "student.email": { $regex: search, $options: "i" } },
+        { "student.phone": { $regex: search, $options: "i" } },
+      ];
     }
 
-    const isCourseExisting = await Courses.findById(courseId);
-    if (!isCourseExisting) {
-      return res.status(404).json({ message: "" });
-    }
-    const applications = await AdmissionApplication.find({ course: courseId });
-    return res.status(200).json({ applications });
+    const totalApplication = await AdmissionApplication.countDocuments(query);
+
+    const applications = await AdmissionApplication.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .select(
+        "student currentStatus statusHistory createdAt course college academicDetails",
+      );
+
+    return res.status(200).json({
+      applications,
+      totalApplication,
+      totalPages: Math.ceil(totalApplication / limit),
+      currentPage: Number(page),
+    });
   } catch (e) {
-    console.log(e);
-    return res.json({
-      message: "Can't able to get the application for the courses",
+    console.error(e);
+    return res.status(500).json({
+      message: "Unable to fetch applications",
     });
   }
 };
+
 
 const uploadDocuments = async (req, res) => {
   try {
@@ -230,6 +253,25 @@ const getApplicationById=async(req,res)=>{
   }
 }
 
+const getApplicationDetails =async(req,res)=>{
+  try{
+    const {applicationId} = req.params;
+    console.log("application Id",applicationId);
+    
+    const application = await AdmissionApplication.findById(applicationId)
+      .populate("course", "name specialization")
+      .populate("college", "name");
+
+      return res.status(200).json({application})
+
+
+  }
+  catch(e){
+    console.log(e)
+    return res.status(500).json({message:"Can't able to get the application by the data"})
+  }
+}
+
 
 module.exports = {
   createAdmissionApplication,
@@ -237,5 +279,7 @@ module.exports = {
   uploadDocuments,
   updateApplicationStatus, //to update the status of the application
   applicationByUser, //getting user Application
-  getApplicationById
+  getApplicationById,
+  getApplicationDetails
+
 };

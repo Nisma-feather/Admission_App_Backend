@@ -80,6 +80,7 @@ const courseAdmissionSchema = new mongoose.Schema(
             "12TH_DETAILS",
             "DIPLOMA_DETAILS",
             "UG_DETAILS",
+            "PG_DETAILS",
             "ENTRANCE_TEST_DETAILS",
           ],
         },
