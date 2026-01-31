@@ -7,9 +7,7 @@ const upload = require("../middlewares/multer");
 router.post("/create",createCollege);
 router.get("/",getColleges);
 
-router.patch("/verification-status/:collegeId",changeVerificationStatus);
-router.get("/getById/:collegeId",getCollegeById);
-router.put("/:collegeId",updateCollegeData);
+
 router.post(
   "/update/:collegeId",
   upload.fields([
@@ -18,6 +16,9 @@ router.post(
   ]),
   updateCollegeWithImages
 );
+router.patch("/verification-status/:collegeId", changeVerificationStatus);
+router.get("/getById/:userId", getCollegeById);
+router.put("/details/:collegeId", updateCollegeData);
 
 
 module.exports=router;

@@ -121,9 +121,9 @@ const getColleges = async (req, res) => {
 
 const getCollegeById=async(req,res)=>{
   try{
-    
-    const {collegeId} = req.params;
-   const college = await College.findById(collegeId);
+    const {userId} = req.params;
+    // const {collegeId} = req.params;
+   const college = await College.findOne({user:userId});
    return res.status(200).json({ college });
   }
   catch(e){
@@ -182,6 +182,7 @@ const updateCollegeWithImages = async (req, res) => {
       { new: true },
     );
 
+   
     if (!college) {
       return res.status(404).json({ message: "College not found" });
     }
@@ -203,32 +204,49 @@ const updateCollegeData = async (req, res) => {
   try {
     const { collegeId } = req.params;
 
-    console.log("Request body:", req.body);
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "No data provided to update" });
+    }
 
     const exists = await College.findById(collegeId);
     if (!exists) {
       return res.status(404).json({ message: "College not found" });
     }
 
-    const updatedCollege = await College.findByIdAndUpdate(
-      collegeId,
-      {
-        $set: {
-          "admission.admissionProcess": req.body.admission?.admissionProcess,
-          "admission.entranceExams": req.body.admission?.entranceExams,
-        },
-      },
-      { new: true },
+    let updateData = {};
+
+    // Admission (nested but partial-safe)
+    if (req.body.admission) {
+      updateData["admission.admissionProcess"] =
+        req.body.admission.admissionProcess;
+      updateData["admission.entranceExams"] = req.body.admission.entranceExams;
+    }
+
+    // Facilities (full object replace)
+    if (req.body.facilities) {
+      updateData["facilities"] = req.body.facilities;
+    }
+
+    // Future sections can be added here
+    // if (req.body.contact) updateData["contact"] = req.body.contact;
+
+
+    const updatedCollege = await College.findOneAndUpdate(
+      {user:collegeId},
+      { $set: updateData },
+      { new: true, runValidators: true },
     );
+     console.log("college", updatedCollege);
+
 
     return res.status(200).json({
-      message: "Admission data updated successfully",
+      message: "College data updated successfully",
       updatedCollege,
     });
   } catch (e) {
     console.error(e);
     return res.status(500).json({
-      message: "Failed to update admission data",
+      message: "Failed to update college data",
       error: e.message,
     });
   }
