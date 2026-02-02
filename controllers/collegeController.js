@@ -202,14 +202,17 @@ const updateCollegeWithImages = async (req, res) => {
 
 const updateCollegeData = async (req, res) => {
   try {
+    console.log("Updating")
     const { collegeId } = req.params;
+   
 
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ message: "No data provided to update" });
     }
 
-    const exists = await College.findById(collegeId);
+    const exists = await College.findOne({user:collegeId});
     if (!exists) {
+
       return res.status(404).json({ message: "College not found" });
     }
 
@@ -224,13 +227,18 @@ const updateCollegeData = async (req, res) => {
 
     // Facilities (full object replace)
     if (req.body.facilities) {
+      console.log("facilities");
       updateData["facilities"] = req.body.facilities;
+    }
+
+    if(req.body?.placement){
+      updateData["placement"] = req.body.placement
     }
 
     // Future sections can be added here
     // if (req.body.contact) updateData["contact"] = req.body.contact;
 
-
+    console.log("updateData")
     const updatedCollege = await College.findOneAndUpdate(
       {user:collegeId},
       { $set: updateData },
