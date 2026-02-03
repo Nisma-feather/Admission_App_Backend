@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {createCollege, changeVerificationStatus, getColleges, getCollegeById,updateCollegeWithImages,updateCollegeData} = require("../controllers/collegeController");
+const {createCollege, changeVerificationStatus, getColleges, getCollegeByUserId,updateCollegeWithImages,updateCollegeData, getCollegeByCollegeId} = require("../controllers/collegeController");
 
 const upload = require("../middlewares/multer");
 
@@ -17,7 +17,8 @@ router.post(
   updateCollegeWithImages
 );
 router.patch("/verification-status/:collegeId", changeVerificationStatus);
-router.get("/getById/:userId", getCollegeById);
+router.get("/getById/:userId", getCollegeByUserId);
+router.get("/getByCollegeId/:collegeId", getCollegeByCollegeId )
 router.put("/details/:collegeId", updateCollegeData);
 
 

@@ -1,55 +1,66 @@
 const College = require("../models/College");
 
-const createCollege = async(req,res)=>{
-    try{
-      const {user}=req.body
+const createCollege = async (req, res) => {
+  try {
+    const { user } = req.body;
 
-      const isUserExists = await College.findOne({user});
-      if(isUserExists){
-        return res.status(404).json({message:"Collge already Exists"})
-      }
-      const newCollege = College.create(req.body);
-    
-      return res.status(200).json({message:"College created successfully"})
-  
+    const isUserExists = await College.findOne({ user });
+    if (isUserExists) {
+      return res.status(404).json({ message: "Collge already Exists" });
     }
-    catch(e){
-        console.log(e);
-        return res.status(500).json({message:"failed to create the college cccount"})
-    }
-}
+    const newCollege = College.create(req.body);
 
-const changeVerificationStatus=async(req,res)=>{
-    try{
-        const {collegeId} = req.params;
-        const {verificationStatus} = req.body;
-        const statusArray = ["Pending", "Approved", "Rejected"];
-        
-        const collegeExists = await College.findById(collegeId);
-        if(!collegeExists){
-            return res.status(404).json({message:"College not found"})
-        }
-        if(!statusArray.includes(verificationStatus)){
-            return res.status(404).json({message:"Not a valid verification status"})
-        }
-        const updatedCollege = await College.findByIdAndUpdate(collegeId, {
-           verificationStatus
-        },{
-            new:true
-        })
-       return res.status(200).json({message:"Verification status updated successfully",updatedCollege})
+    return res.status(200).json({ message: "College created successfully" });
+  } catch (e) {
+    console.log(e);
+    return res
+      .status(500)
+      .json({ message: "failed to create the college cccount" });
+  }
+};
+
+const changeVerificationStatus = async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    const { verificationStatus } = req.body;
+    const statusArray = ["Pending", "Approved", "Rejected"];
+
+    const collegeExists = await College.findById(collegeId);
+    if (!collegeExists) {
+      return res.status(404).json({ message: "College not found" });
     }
-    catch(e){
-        console.log(e);
-        return res.status(200).json({message:"Can't able to change the cerification Status"})
+    if (!statusArray.includes(verificationStatus)) {
+      return res
+        .status(404)
+        .json({ message: "Not a valid verification status" });
     }
-}
+    const updatedCollege = await College.findByIdAndUpdate(
+      collegeId,
+      {
+        verificationStatus,
+      },
+      {
+        new: true,
+      },
+    );
+    return res
+      .status(200)
+      .json({
+        message: "Verification status updated successfully",
+        updatedCollege,
+      });
+  } catch (e) {
+    console.log(e);
+    return res
+      .status(200)
+      .json({ message: "Can't able to change the cerification Status" });
+  }
+};
 
 const getColleges = async (req, res) => {
   try {
-    console.log("queries received", req.query)
-    let { name, loc,  nba,verificationStatus="" } = req.query;
-   
+    console.log("queries received", req.query);
+    let { name, loc, nba, verificationStatus = "" } = req.query;
 
     const collegeType = req.query?.collegeType
       ? req.query.collegeType.split(",")
@@ -58,12 +69,11 @@ const getColleges = async (req, res) => {
     const facilities = req.query?.facilities
       ? req.query.facilities.split(",")
       : [];
-    console.log("facilities",facilities)
-     
-    const accreditation = req.query?.accreditation
-        ? req.query.accreditation.split(",")
-        : [];
+    console.log("facilities", facilities);
 
+    const accreditation = req.query?.accreditation
+      ? req.query.accreditation.split(",")
+      : [];
 
     let query = {};
 
@@ -97,18 +107,18 @@ const getColleges = async (req, res) => {
 
     // NBA
     if (nba && nba === true) {
-      query["accreditation.nba"] = nba 
+      query["accreditation.nba"] = nba;
     }
-    if (verificationStatus && verificationStatus.trim() !== ""){
+    if (verificationStatus && verificationStatus.trim() !== "") {
       query.verificationStatus = verificationStatus;
     }
-      console.log("FINAL QUERY:", query);
+    console.log("FINAL QUERY:", query);
 
     const colleges = await College.find(query).select(
-      "name location establishedYear type facilities accreditation placement admission verificationStatus"
+      "name location establishedYear type facilities accreditation placement admission verificationStatus",
     );
 
-    return res.status(200).json({ collegCount:colleges.length, colleges });
+    return res.status(200).json({ collegCount: colleges.length, colleges });
   } catch (e) {
     console.error(e);
     return res.status(500).json({
@@ -119,23 +129,35 @@ const getColleges = async (req, res) => {
 
 //get college details based on ID
 
-const getCollegeById=async(req,res)=>{
-  try{
-    const {userId} = req.params;
+const getCollegeByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
     // const {collegeId} = req.params;
-   const college = await College.findOne({user:userId});
-   return res.status(200).json({ college });
-  }
-  catch(e){
+    const college = await College.findOne({ user: userId });
+    return res.status(200).json({ college });
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({message:"Can't able to get the college details"})
-    
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the college details" });
   }
-}
+};
+const getCollegeByCollegeId = async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    const college = await College.findById(collegeId);
+    return res.status(200).json({ college });
+  } catch (e) {
+    console.log(e);
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the college details" });
+  }
+};
 
 const updateCollegeWithImages = async (req, res) => {
   try {
-    console.log("Updating college data")
+    console.log("Updating college data");
     const { collegeId } = req.params;
     const updateData = {};
 
@@ -172,8 +194,7 @@ const updateCollegeWithImages = async (req, res) => {
     if (req.files?.profileImage) {
       const file = req.files.profileImage[0];
       const base64 = file.buffer.toString("base64");
-      updateData["profileImage"] =
-        `data:${file.mimetype};base64,${base64}`;
+      updateData["profileImage"] = `data:${file.mimetype};base64,${base64}`;
     }
 
     const college = await College.findByIdAndUpdate(
@@ -182,7 +203,6 @@ const updateCollegeWithImages = async (req, res) => {
       { new: true },
     );
 
-   
     if (!college) {
       return res.status(404).json({ message: "College not found" });
     }
@@ -202,17 +222,15 @@ const updateCollegeWithImages = async (req, res) => {
 
 const updateCollegeData = async (req, res) => {
   try {
-    console.log("Updating")
+    console.log("Updating");
     const { collegeId } = req.params;
-   
 
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({ message: "No data provided to update" });
     }
 
-    const exists = await College.findOne({user:collegeId});
+    const exists = await College.findOne({ user: collegeId });
     if (!exists) {
-
       return res.status(404).json({ message: "College not found" });
     }
 
@@ -231,21 +249,20 @@ const updateCollegeData = async (req, res) => {
       updateData["facilities"] = req.body.facilities;
     }
 
-    if(req.body?.placement){
-      updateData["placement"] = req.body.placement
+    if (req.body?.placement) {
+      updateData["placement"] = req.body.placement;
     }
 
     // Future sections can be added here
     // if (req.body.contact) updateData["contact"] = req.body.contact;
 
-    console.log("updateData")
+    console.log("updateData");
     const updatedCollege = await College.findOneAndUpdate(
-      {user:collegeId},
+      { user: collegeId },
       { $set: updateData },
       { new: true, runValidators: true },
     );
-     console.log("college", updatedCollege);
-
+    console.log("college", updatedCollege);
 
     return res.status(200).json({
       message: "College data updated successfully",
@@ -260,6 +277,12 @@ const updateCollegeData = async (req, res) => {
   }
 };
 
-
-
-module.exports = {createCollege,changeVerificationStatus,getColleges,getCollegeById,updateCollegeWithImages,updateCollegeData}
+module.exports = {
+  createCollege,
+  changeVerificationStatus,
+  getColleges,
+  getCollegeByUserId,
+  getCollegeByCollegeId,
+  updateCollegeWithImages,
+  updateCollegeData,
+};

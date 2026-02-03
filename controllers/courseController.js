@@ -46,7 +46,9 @@ const addCourse = async (req, res) => {
 const updateCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
-
+    console.log("course ID",courseId);
+    console.log("req body",req.body)
+    
     const existingCourse = await Course.findById(courseId);
     if (!existingCourse) {
       return res.status(404).json({ message: "Course not found" });
