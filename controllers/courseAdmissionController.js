@@ -174,10 +174,165 @@ const getCoursesByAcademyYear = async (req, res) => {
   }
 };
 
+const getCourseAdmissionsAgg = async (req, res) => {
+  try {
+    const {
+      courseSearch,
+      collegeSearch,
+      academicYear,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const pipeline = [];
+
+    /* ---------------- Academic Year Filter ---------------- */
+    if (academicYear) {
+      pipeline.push({ $match: { academicYear } });
+    }
+
+    /* ---------------- Lookup Course ---------------- */
+    pipeline.push(
+      {
+        $lookup: {
+          from: "courses",
+          localField: "course",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      { $unwind: "$course" },
+    );
+
+    /* ---------------- Course Partial Search ---------------- */
+    if (courseSearch) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "course.name": { $regex: courseSearch, $options: "i" } },
+            {
+              "course.specialization": {
+                $regex: courseSearch,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    /* ---------------- Lookup College ---------------- */
+    pipeline.push(
+      {
+        $lookup: {
+          from: "colleges",
+          localField: "college",
+          foreignField: "_id",
+          as: "college",
+        },
+      },
+      { $unwind: "$college" },
+    );
+
+    /* ---------------- College Partial Search ---------------- */
+    if (collegeSearch) {
+      pipeline.push({
+        $match: {
+          "college.name": { $regex: collegeSearch, $options: "i" },
+        },
+      });
+    }
+
+    /* ---------------- Facet: Data + Stats ---------------- */
+    pipeline.push({
+      $facet: {
+        data: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: Number(limit) },
+          {
+            $project: {
+              academicYear: 1,
+              applicationStatus: 1,
+              intake: 1,
+              admissionWindow:1,
+              applicationsReceived: 1,
+              createdAt: 1,
+
+              course: {
+                _id: "$course._id",
+                name: "$course.name",
+                specialization: "$course.specialization",
+                level: "$course.level",
+              },
+
+              college: {
+                _id: "$college._id",
+                name: "$college.name",
+              },
+            },
+          },
+        ],
+
+        stats: [
+          {
+            $group: {
+              _id: null,
+              totalAdmissions: { $sum: 1 },
+              openAdmissions: {
+                $sum: {
+                  $cond: [{ $eq: ["$applicationStatus", "OPEN"] }, 1, 0],
+                },
+              },
+              closedAdmissions: {
+                $sum: {
+                  $cond: [{ $eq: ["$applicationStatus", "CLOSED"] }, 1, 0],
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    const result = await CourseAdmission.aggregate(pipeline);
+
+    const data = result[0]?.data || [];
+    const stats = result[0]?.stats[0] || {
+      totalAdmissions: 0,
+      openAdmissions: 0,
+      closedAdmissions: 0,
+    };
+
+    return res.json({
+      success: true,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: stats.totalAdmissions,
+        totalPages: Math.ceil(stats.totalAdmissions / limit),
+      },
+      stats,
+      admissions: data,
+    });
+  } catch (error) {
+    console.error("Aggregation search error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch course admissions",
+    });
+  }
+};
+
+
+
 module.exports = {
   getUnassignedCourses,
   createCourseAdmission,
   getCourseAdmissionStatus,
   getAcademicAdmissionDetails,
+  getCourseAdmissionsAgg,//searching the admisson courses with colleges
   getCoursesByAcademyYear, //getting the cpourses by academic year
 };
