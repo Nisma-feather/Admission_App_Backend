@@ -12,8 +12,9 @@ const courseRoutes = require("./routes/courseRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const courseAdmissionRoutes  = require("./routes/courseAdmissionRoutes");
-const mediaRoutes = require("./routes/mediaRoutes")
-const { updateCollegeWithImages } = require("./controllers/collegeController");
+const mediaRoutes = require("./routes/mediaRoutes");
+const academicYearRoutes = require("./routes/academicYearRoutes")
+
 
 
 
@@ -30,7 +31,8 @@ app.use("/course",courseRoutes);
 app.use("/application",applicationRoutes);
 app.use("/admin",adminRoutes);
 app.use("/admissionCourse",courseAdmissionRoutes);
-app.use("/media",mediaRoutes)
+app.use("/media",mediaRoutes);
+app.use("/academicYear",academicYearRoutes)
 
 //69783de325a78eaa1dbeaa8b
 
