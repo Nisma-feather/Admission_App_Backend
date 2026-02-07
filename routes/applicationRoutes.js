@@ -1,8 +1,10 @@
 const express = require('express');
-const {getApplicationsByCourse,createAdmissionApplication, updateApplicationStatus, applicationByUser, getApplicationById, getApplicationDetails} = require("../controllers/AdmissionApplicationController")
+const {getApplicationsByCourse,createAdmissionApplication, updateApplicationStatus, applicationByUser, getApplicationById, getApplicationDetails, getAllApplication} = require("../controllers/AdmissionApplicationController")
 const upload = require("../middlewares/multer")
 const router = express.Router();
 
+
+router.get("/all",getAllApplication);
 router.post("/", upload.array("files"),createAdmissionApplication);
 router.get("/by-course/:courseAdmissionId",getApplicationsByCourse)
 router.put("/update-status/:applicationId",updateApplicationStatus);

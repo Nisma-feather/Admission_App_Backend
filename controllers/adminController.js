@@ -1,4 +1,7 @@
 const College = require("../models/College");
+const CourseAdmission = require("../models/CourseAdmission");
+const AdmissionApplication = require("../models/AdmissionApplication");
+
 
 const changeCollegeStatus = async (req, res) => {
   try {
@@ -73,8 +76,42 @@ const changeCollegeStatus = async (req, res) => {
   }
 };
 
+const getAdminDashboardOverview = async (req, res) => {
+  try {
+    const { academicYear } = req.query;
+
+    // Dynamic filters
+    const courseQuery = {};
+    const applicationQuery = {};
+
+    if (academicYear) {
+      courseQuery.academicYear = academicYear;
+      applicationQuery["courseAdmission.academicYear"] = academicYear; // if stored
+    }
+
+    const [totalColleges, totalActiveCourses, totalApplications] =
+      await Promise.all([
+        College.countDocuments(),
+        CourseAdmission.countDocuments(courseQuery),
+        AdmissionApplication.countDocuments(applicationQuery),
+      ]);
+
+    return res.status(200).json({
+      totalColleges,
+      totalActiveCourses,
+      totalApplications,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      message: "Unable to fetch admin dashboard overview",
+    });
+  }
+};
+
+
 //updating college with images
 
 
 
-module.exports={changeCollegeStatus}
+module.exports={changeCollegeStatus,getAdminDashboardOverview}

@@ -156,7 +156,6 @@ const getApplicationsByCourse = async (req, res) => {
   }
 };
 
-
 const uploadDocuments = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -226,7 +225,6 @@ const applicationByUser = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
-
     return res.status(200).json({ applications });
   } catch (e) {
     console.error(e);
@@ -236,41 +234,137 @@ const applicationByUser = async (req, res) => {
   }
 };
 
-const getApplicationById=async(req,res)=>{
-  try{
-    const {applicationId} = req.params;
+const getApplicationById = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
     const application = await AdmissionApplication.findById(applicationId)
       .select("-documents")
       .populate("course", "name specialization")
       .populate("college", "name");
-    return res.status(200).json({application});
-    
-
-  }
-  catch(e){
+    return res.status(200).json({ application });
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({message:"Can't able to get the application"})
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the application" });
   }
-}
+};
 
-const getApplicationDetails =async(req,res)=>{
-  try{
-    const {applicationId} = req.params;
-    console.log("application Id",applicationId);
-    
+const getApplicationDetails = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    console.log("application Id", applicationId);
+
     const application = await AdmissionApplication.findById(applicationId)
       .populate("course", "name specialization")
       .populate("college", "name");
 
-      return res.status(200).json({application})
-
-
+    return res.status(200).json({ application });
+  } catch (e) {
+    console.log(e);
+    return res
+      .status(500)
+      .json({ message: "Can't able to get the application by the data" });
   }
-  catch(e){
-    console.log(e)
-    return res.status(500).json({message:"Can't able to get the application by the data"})
+};
+
+const getAllApplication = async (req, res) => {
+  try {
+    const { academicYear } = req.query;
+
+    const pipeline = [
+      // 1️⃣ Join CourseAdmission (for academicYear)
+      {
+        $lookup: {
+          from: "courseadmissions",
+          localField: "courseAdmission",
+          foreignField: "_id",
+          as: "courseAdmission",
+        },
+      },
+      { $unwind: "$courseAdmission" },
+
+      // 2️⃣ Filter by academic year (optional)
+      ...(academicYear
+        ? [
+            {
+              $match: {
+                "courseAdmission.academicYear": academicYear,
+              },
+            },
+          ]
+        : []),
+
+      // 3️⃣ Join Course (USING application.course)
+      {
+        $lookup: {
+          from: "courses",
+          localField: "course",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      { $unwind: "$course" },
+
+      // 4️⃣ Join College (USING application.college)
+      {
+        $lookup: {
+          from: "colleges",
+          localField: "college",
+          foreignField: "_id",
+          as: "college",
+        },
+      },
+      { $unwind: "$college" },
+
+      // 5️⃣ Extract last status
+      {
+        $addFields: {
+          lastStatus: { $arrayElemAt: ["$statusHistory", -1] },
+        },
+      },
+
+      // 6️⃣ Final response shape
+      {
+        $project: {
+          student: {
+            fullName: "$student.fullName",
+            email: "$student.email",
+            phone: "$student.phone",
+          },
+
+          academicYear: "$courseAdmission.academicYear",
+
+          courseName: "$course.name",
+          collegeName: "$college.name",
+
+          currentStatus: 1,
+
+          lastStatusName: "$lastStatus.status",
+          lastStatusAt: "$lastStatus.changedAt",
+
+          paymentStatus: "$payment.status",
+          createdAt: 1,
+        },
+      },
+
+      { $sort: { createdAt: -1 } },
+    ];
+
+    const applications = await AdmissionApplication.aggregate(pipeline);
+
+    return res.status(200).json({
+      total: applications.length,
+      applications,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      message: "Can't able to get the applications",
+    });
   }
-}
+};
+
 
 
 module.exports = {
@@ -280,6 +374,6 @@ module.exports = {
   updateApplicationStatus, //to update the status of the application
   applicationByUser, //getting user Application
   getApplicationById,
-  getApplicationDetails
-
+  getApplicationDetails,
+  getAllApplication,
 };
